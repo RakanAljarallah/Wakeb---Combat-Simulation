@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4aadffe005f350d4e83aab502654ebc6
+timeCreated: 1439123417
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 38259
+  packageName: Combat Vehicle
+  packageVersion: 1.02
+  assetPath: Assets/Combat_Vehicle/Materials/V_body_camo.mat
+  uploadId: 76165

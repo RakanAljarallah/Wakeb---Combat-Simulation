@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ed4c17524a24612488905624c64877b4
+timeCreated: 1434303845
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 38259
+  packageName: Combat Vehicle
+  packageVersion: 1.02
+  assetPath: Assets/Combat_Vehicle/Combat_Vehicle_demo.unity
+  uploadId: 76165
