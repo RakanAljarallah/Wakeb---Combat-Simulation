@@ -16,6 +16,8 @@ namespace Player
         
         public static VehicaleManager Instance;
         
+        public bool canInteract;
+        
         void Awake()
         {
             if (Instance == null)
@@ -38,11 +40,13 @@ namespace Player
 
         public void PlayerExitVehicleRange()
         {
+            canInteract = false;
             OnplayerVehicleExit.Invoke();
         }
 
         public void PlayerEnterVehicleRange()
         {
+            canInteract = true;
             OnplayerVehicleEnter.Invoke();
         }
     }

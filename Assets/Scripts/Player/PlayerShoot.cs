@@ -1,6 +1,7 @@
 using System;
 using Helper;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerShoot : MonoBehaviour
 {
@@ -9,6 +10,10 @@ public class PlayerShoot : MonoBehaviour
     public float fireRate = 15f;
     private float nextTimeToFire = 0f;
     public float damage = 10f;
+    
+    public Image weapenIcon;
+    
+   [SerializeField] private Sprite[] weapenIcons;
     
     private Animator zoomFPSAnimator;
 
@@ -23,6 +28,31 @@ public class PlayerShoot : MonoBehaviour
         zoomFPSAnimator = GameObject.FindGameObjectWithTag(Tags.FPS_CAMERA_TAG).gameObject.GetComponent<Animator>();
         crosshair = GameObject.FindWithTag(Tags.CROSSHAIR_TAG);
         mainCamera = Camera.main;
+    }
+
+    public void ChangeFireType()
+    {
+        switch (weapenManager.currentWeapen.fireType)
+        {
+            case WeapenFireType.Single:
+            {
+                weapenManager.changeFireType(WeapenFireType.SemiAuto);
+                weapenIcon.sprite = weapenIcons[1];
+                break;
+            }
+            case WeapenFireType.SemiAuto:
+            {
+                weapenManager.changeFireType(WeapenFireType.Auto);
+                weapenIcon.sprite = weapenIcons[2];
+                break;
+            }
+            case WeapenFireType.Auto:
+            {
+                weapenManager.changeFireType(WeapenFireType.Single);
+                weapenIcon.sprite = weapenIcons[0];
+                break;
+            }
+        }
     }
 
 
@@ -82,7 +112,12 @@ public class PlayerShoot : MonoBehaviour
     {
         if (Physics.Raycast(mainCamera.transform.position, mainCamera.transform.forward, out RaycastHit hit, 100))
         {
-            Debug.Log("Hit : " + hit.transform.name);
+            if (hit.transform.TryGetComponent(out Target target))
+            {
+                
+                target.TakeDamage(damage);
+            }
+           
         }
     }
 }

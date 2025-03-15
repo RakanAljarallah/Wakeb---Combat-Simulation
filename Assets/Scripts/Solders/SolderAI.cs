@@ -1,221 +1,178 @@
-using System.Collections;
-using Helper;
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 namespace Solders
 {
     public class SolderAI : MonoBehaviour
     {
-        public enum EnemeyState { Patrolling, Chasing, Attacking, TakingCover }
-        
-        private EnemeyState currentState = EnemeyState.Patrolling;
-        
-        
-        private NavMeshAgent agent;
-        public Transform PatrollingTarget;
-       [HideInInspector] public Transform currentPatrollingTarget;
+        public enum EnemyState { Patrolling, Chasing, Attacking }
         
         public float attackRange = 10f;
         public float movementSpeed = 5f;
+        public Transform patrolPoint; 
         
-        LineSight lineSight;
-        SolderAnimation solderAnimation;
-        SolderSound solderSound;
-        SolderShoot solderShoot;
+        [SerializeField] private LineSight lineSight;
         
+         
+        private NavMeshAgent agent;
+        private SolderAnimation solderAnimation;
+        private SolderSound solderSound;
+        private SolderShoot solderShoot;
         
-        public EnemeyState CurrentState
+         
+        private EnemyState currentState;
+        private Transform currentTarget;
+        private WaitForSeconds stateUpdateDelay = new WaitForSeconds(0.2f);
+
+        private EnemyState CurrentState
         {
-            get => currentState;
+            get { return currentState; }
             set
-            { 
+            {
                 currentState = value;
+                
                 StopAllCoroutines();
-                Debug.Log("current state :" + currentState);
-                switch (currentState)
+                switch(currentState)
                 {
-                    case EnemeyState.Patrolling:
-                    {
-                        StartCoroutine(AIPatrolling());
+                    case EnemyState.Patrolling:
+                         
+                        StartCoroutine(PatrolRoutine());
                         break;
-                    }
-                    case EnemeyState.Chasing:
-                    {
-                        StartCoroutine(Chasing());
+                    
+                    case EnemyState.Chasing:
+                         
+                        StartCoroutine(ChaseRoutine());
                         break;
-                    }
-                    case EnemeyState.Attacking:
-                    {
-                        StartCoroutine(Attacking());
+                    
+                    case EnemyState.Attacking:
+                       
+                        StartCoroutine(AttackRoutine());
                         break;
-                    }
                 }
             }
-        }
+        } 
+     
         
         private void Awake()
         {
             agent = GetComponent<NavMeshAgent>();
-            lineSight = GetComponentInChildren<LineSight>();
             solderAnimation = GetComponent<SolderAnimation>();
             solderSound = GetComponent<SolderSound>();
             solderShoot = GetComponent<SolderShoot>();
+            
+            agent.speed = movementSpeed;
+            agent.stoppingDistance = 1f; 
         }
 
         private void Start()
         {
-            currentPatrollingTarget = PatrollingTarget;
-            CurrentState = EnemeyState.Patrolling;
-            
+            currentTarget = patrolPoint;
+
+            CurrentState = EnemyState.Patrolling;
+
         }
 
-        public IEnumerator AIPatrolling()
-        {
-            while (currentState == EnemeyState.Patrolling)
-            {
-                agent.isStopped = false;
-                agent.SetDestination(currentPatrollingTarget.position);
-
-                while (agent.pathPending)
-                {
-                    yield return null;
-                }
-                if (lineSight.canSeeTraget)
-                {
-                    StopState();
-                    agent.isStopped = true;
-                    
-                    CurrentState = EnemeyState.Chasing;
-                    yield break;
-                }
-
-                if (agent.remainingDistance <= agent.stoppingDistance)
-                {
-                    StopState();
-                }
-                else
-                {
-                    RunState();
-                }
-                
-
-                yield return null;
-            }
-            yield return null;
-        }
         
-        public IEnumerator Chasing()
-        {
-            while (currentState == EnemeyState.Chasing)
-            {
-                
-                agent.isStopped = false;
-                agent.SetDestination(lineSight.lastKnownPosition);
-                
-                while (agent.pathPending)
-                    yield return null;
 
-                if (agent.remainingDistance <= attackRange)
-                {
-                    StopState();
-                    agent.isStopped = true;
-
-                    if (!lineSight.canSeeTraget)
-                    {
-                        CurrentState = EnemeyState.Patrolling;
-                    }
-                    else
-                    {
-                        CurrentState = EnemeyState.Attacking;
-                    }
-                    
-                    yield break;
-                }
-                
-                // implement chase logic here
-                RunState();
-                yield return null;
-            }
-            yield return null;
-        }
         
-        public IEnumerator Attacking()
+
+        private IEnumerator PatrolRoutine()
         {
-            while (currentState == EnemeyState.Attacking)
-            {
-
-                agent.isStopped = false;
-                agent.SetDestination(lineSight.target.position);
-
-                while (agent.pathPending)
-                {
-                    yield return null;
-                }
-
-                if (agent.remainingDistance > attackRange || !lineSight.canSeeTraget)
-                {
-                    StopShoot();
-                    agent.isStopped = true;
-                    CurrentState = EnemeyState.Chasing;
-                    yield break;
-                }
-                
-                
-                transform.LookAt(lineSight.lastKnownPosition);
-                StopState();
-                ShootState();
-                
-                yield return null;
-            }
-            yield return null;
-        }
-        
-       
-
-        private void ShootState()
-        {
-            solderAnimation.Shoot(true);
-            solderSound.PlayShotSound();
-            solderShoot.TunrOnMuzzleFlash();
-           RaycastHit hit =    solderShoot.ShotPoint();
-
-           if (hit.transform.CompareTag(Tags.TARGET_TAG))
-           {
-               Target target = hit.transform.GetComponent<Target>();
-               target.TakeDamage(10);
-               bool isDead = target.currentHealth <= 0;
-               
-               
-               if (isDead)
-               {
-                   agent.isStopped = true;
-                   CurrentState = EnemeyState.Patrolling;
-               }
-               
-           }
-           
-            
-        }
-
-        private void StopShoot()
-        {
-            solderAnimation.Shoot(false);
-            solderShoot.TunrOffMuzzleFlash();
-        }
-        
-        private void RunState()
-        {
-            solderAnimation.Run(true);
-            solderSound.PlayRunSound();
-        }
-
-        private void StopState()
-        {
-            solderAnimation.Run(false);
-        }
+            agent.stoppingDistance = 1f;  
     
+            while(currentState == EnemyState.Patrolling)
+            {
+                 
+                agent.SetDestination(patrolPoint.position);
+                agent.isStopped = false;
+
+                 
+                solderAnimation.Run(agent.velocity.magnitude > 0.1f);
+                solderSound.PlayRunSound(agent.velocity.magnitude > 0.1f);
+
+                 
+                if(lineSight.canSeeTarget)
+                {
+                    currentTarget = lineSight.target;
+                    CurrentState = EnemyState.Chasing;
+                    yield break;
+                }
+
+                 
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+
+        private IEnumerator ChaseRoutine()
+        {
+            agent.stoppingDistance = attackRange * 0.9f;  
+    
+            while(currentState == EnemyState.Chasing)
+            {
+                if(currentTarget == null)  
+                {
+                    CurrentState = EnemyState.Patrolling;
+                    yield break;
+                }
+
+                agent.SetDestination(currentTarget.position);
+                solderAnimation.Run(agent.velocity.magnitude > 0.1f);
+                solderSound.PlayRunSound(agent.velocity.magnitude > 0.1f);
+        
+                 
+                float distance = Vector3.Distance(transform.position, currentTarget.position);
+                if(distance <= attackRange)
+                {
+                    CurrentState = EnemyState.Attacking;
+                    yield break;
+                }
+                
+                FaceTarget();
+                
+                yield return null;
+            }
+        }
+         
+
+        private IEnumerator AttackRoutine()
+        {
+            var attackDelay = new WaitForSeconds(0.5f);
+            solderAnimation.Run(false);
+            while(currentState == EnemyState.Attacking)
+            {
+                solderShoot.TunrOffMuzzleFlash();
+                if(currentTarget == null || 
+                   Vector3.Distance(transform.position, currentTarget.position) > attackRange * 1.1f)
+                {
+                    CurrentState = EnemyState.Chasing;
+                    yield break;
+                }
+
+                FaceTarget();
+                solderShoot.ShotPoint();
+                solderSound.PlayShotSound();
+                solderShoot.TunrOnMuzzleFlash();
+                yield return attackDelay;
+                
+            }
+            
+            agent.isStopped = false;
+        }
+
+        private void FaceTarget()
+        {
+            if(currentTarget == null) return;
+            
+            Vector3 direction = (currentTarget.position - transform.position).normalized;
+            Quaternion lookRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation, 
+                lookRotation, 
+                Time.deltaTime * 10f
+            );
+        }
+
+        
     }
 }
-
-

@@ -1,44 +1,85 @@
-using Helper;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace Solders
 {
     public class SolderShoot : MonoBehaviour
     {
-        
+        [Header("References")]
         [SerializeField] private Transform shotPoint;
         [SerializeField] private GameObject muzzleFlash;
+        [SerializeField] private ParticleSystem shotEffect;
         
-        [SerializeField] private Transform shotEffect;
-        
+        [Header("Settings")]
+        [SerializeField] private float shotRange = 30f;
+        [SerializeField] private int shotDamage = 10;
+
+        private RaycastHit[] raycastHits = new RaycastHit[1];
+        private ObjectPool<GameObject> muzzleFlashPool;
+        private bool muzzleActive;
+
         private void Start()
         {
-            muzzleFlash.SetActive(false);
+            muzzleFlashPool = new ObjectPool<GameObject>(
+                createFunc: () => Instantiate(muzzleFlash),
+                actionOnGet: obj => obj.SetActive(true),
+                actionOnRelease: obj => obj.SetActive(false),
+                defaultCapacity: 5
+            );
         }
-        
+
         public void TunrOnMuzzleFlash()
         {
-            muzzleFlash.SetActive(true);
+            if(muzzleActive) return;
+            muzzleActive = true;
+            muzzleFlashPool.Get();
         }
         
         public void TunrOffMuzzleFlash()
         {
-            muzzleFlash.SetActive(false);
+            if(!muzzleActive) return;
+            muzzleActive = false;
+            muzzleFlashPool.Release(muzzleFlash);
         }
 
-        public RaycastHit ShotPoint()
+        public bool ShotPoint()
         {
-            // RaycastHit hit;
+            int hits = Physics.RaycastNonAlloc(
+                shotPoint.position, 
+                shotPoint.forward, 
+                raycastHits,
+                shotRange
+            );
 
-            if (Physics.Raycast(shotPoint.position, shotPoint.forward, out RaycastHit hit, 30f))
+            if(hits > 0)
             {
-                shotEffect.position = hit.point;
-                shotEffect.GetComponent<ParticleSystem>().Play();
-                return hit;
+                var hit = raycastHits[0];
+                if(TryGetTarget(hit.transform, out Target target))
+                {
+                    bool targetDied = target.TakeDamage(shotDamage);
+                    PlayShotEffect(hit.point);
+                    return targetDied;
+                }
             }
-            
-            return hit;
+            return false;
         }
-        
+
+        private bool TryGetTarget(Transform t, out Target target)
+        {
+            if(t.TryGetComponent<Target>(out target))
+            {
+                return !target.IsDead; 
+            }
+            return false;
+        }
+
+        private void PlayShotEffect(Vector3 position)
+        {
+            shotEffect.transform.position = position;
+            if(!shotEffect.isPlaying)
+            {
+                shotEffect.Play(true);
+            }
+        }
     }
 }

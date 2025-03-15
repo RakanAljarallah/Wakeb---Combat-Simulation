@@ -1,36 +1,51 @@
-using System;
 using UnityEngine;
 
 namespace Solders
 {
     public class SolderSound : MonoBehaviour
     {
-        private AudioSource audioSource;
-        
         [SerializeField] private AudioClip runClip;
         [SerializeField] private AudioClip shotClip;
+        
+        private AudioSource movementSource;
+        private AudioSource actionSource;
+        private bool isMoving;
+
+        private float currentShotTime = 0;
+
+        public float timeInterval = 1f;
 
         private void Awake()
         {
-            audioSource = GetComponent<AudioSource>();
+            movementSource = gameObject.AddComponent<AudioSource>();
+            actionSource = gameObject.AddComponent<AudioSource>();
         }
 
-        public void PlayRunSound()
+        public void PlayRunSound(bool moving)
         {
-            if (!audioSource.isPlaying)
-            {
-                audioSource.PlayOneShot(runClip);
-            }
+            if(isMoving == moving) return;
+            isMoving = moving;
             
+            if(moving)
+            {
+                movementSource.clip = runClip;
+                movementSource.loop = true;
+                movementSource.Play();
+            }
+            else
+            {
+                movementSource.Stop();
+            }
         }
         
         public void PlayShotSound()
         {
-            if (!audioSource.isPlaying)
+            if (Time.time > currentShotTime + timeInterval)
             {
-                audioSource.PlayOneShot(shotClip);
+                currentShotTime = Time.time;
+                actionSource.PlayOneShot(shotClip);
             }
+           // actionSource.PlayOneShot(shotClip);
         }
-        
     }
 }

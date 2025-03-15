@@ -1,72 +1,64 @@
-using System;
-using Helper;
 using UnityEngine;
 
 public class LineSight : MonoBehaviour
 {
-   //public float fieldOfView = 90f;
     
-    public Transform target = null;
+    [SerializeField] private float visionRange = 15f;
+    [SerializeField] private float fieldOfView = 90f;
+    [SerializeField] private LayerMask targetMask;
     
-    public Transform eyePoint = null;
     
-    public bool canSeeTraget = false;
+    [HideInInspector] public bool canSeeTarget = false;
+    [HideInInspector] public Vector3 lastKnownPosition = Vector3.zero;
+   [HideInInspector] public Transform target = null;
 
-    private SphereCollider sphereCollider = null;
-    
-    public Vector3 lastKnownPosition = Vector3.zero;
-    
-    private string entityTag = Tags.TARGET_TAG;
+    private Collider[] potentialTargets = new Collider[5];
+    private float checkInterval = 0.25f;
+    private float checkTimer;
 
-    public bool isSolder = true;
     private void Awake()
     {
-        sphereCollider = GetComponent<SphereCollider>();
-        lastKnownPosition = transform.position;
-        
-        entityTag = isSolder ? Tags.TARGET_TAG : Tags.PLAYER_TAG;
+        SphereCollider collider = GetComponent<SphereCollider>();
+        if(collider) collider.radius = visionRange;
     }
 
-    void OnTriggerStay(Collider other)
+    private void Update()
     {
-      
-        if (other.CompareTag(entityTag))
+        checkTimer += Time.deltaTime;
+        if(checkTimer >= checkInterval)
         {
-            canSeeTraget = true;
-            lastKnownPosition = other.transform.position;
-            target = other.transform;
+            CheckForTargets();
+            checkTimer = 0;
         }
-        
     }
 
-    // bool INFoV()
-    // {
-    //     Vector3 direToTarget = target.position - eyePoint.position;
-    //     
-    //     float angleToTarget = Vector3.Angle(eyePoint.forward, direToTarget);
-    //     
-    //     if(angleToTarget <= fieldOfView)
-    //     {
-    //         return true;
-    //     }
-    //     
-    //
-    //     return false;
-    // }
+    private void CheckForTargets()
+    {
+        canSeeTarget = false;
+        
+        int targetsFound = Physics.OverlapSphereNonAlloc(
+            transform.position,
+            visionRange,
+            potentialTargets,
+            targetMask
+        );
 
-    // bool isTargetInSight()
-    // {
-    //     RaycastHit hit;
-    //     
-    //     if(Physics.Raycast(eyePoint.position, target.position - eyePoint.position, out hit, sphereCollider.radius))
-    //     {
-    //         if(hit.transform.CompareTag(Tags.TARGET_TAG))
-    //         {
-    //             lastKnownPosition = target.position;
-    //             return true;
-    //         }
-    //     }
-    //
-    //     return false;
-    // }
+        if (targetsFound > 0)
+        {
+            for (int i = 0; i < potentialTargets.Length; i++)
+            {
+                if (potentialTargets[i] == null) continue;
+                Target potentilaTarget;
+                
+                if (potentialTargets[i].gameObject.TryGetComponent<Target>(out potentilaTarget))
+                {
+                    canSeeTarget = true;
+                    target = potentilaTarget.transform;
+                    lastKnownPosition = potentilaTarget.transform.position;
+                }
+            }
+        }
+    }
+    
+    
 }

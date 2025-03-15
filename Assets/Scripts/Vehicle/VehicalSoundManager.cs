@@ -24,7 +24,7 @@ public class VehicalSoundManager : MonoBehaviour
         get => currentEngineSoundType;
         set
         {
-            Debug.Log("set currentEngineSoundType :" + value);
+             
             currentEngineSoundType = value;
             switch (currentEngineSoundType)
             {

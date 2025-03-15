@@ -52,6 +52,7 @@ namespace Player
             Attack();
             Interact();
             CheckCursorState();
+            ChangeFireType();
         }
         
         private void FixedUpdate()
@@ -85,6 +86,7 @@ namespace Player
             if (inputFeedBack.isAttacking)
             {
                 playerShoot.WeapenShot();
+               
             }
         }
 
@@ -103,10 +105,19 @@ namespace Player
 
         private void Interact()
         {
-            if (inputFeedBack.isInteracting)
+            if (inputFeedBack.isInteracting && VehicaleManager.Instance.canInteract)
             {
                 VehicaleManager.Instance.InteractPlayerVehicleEnter();
                 inputFeedBack.isInteracting = false;
+            }
+        }
+
+        private void ChangeFireType()
+        {
+            if (inputFeedBack.isChangingFireType)
+            {
+                playerShoot.ChangeFireType();
+                inputFeedBack.isChangingFireType = false;
             }
         }
 

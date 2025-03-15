@@ -1,5 +1,6 @@
 using System;
 using Player;
+using Solders;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Vehicle;
@@ -53,6 +54,24 @@ public class VehicleController : MonoBehaviour
         ApplyDownforce();
     }
 
+    private void OnCollisionEnter(Collision other)
+    {
+        if (other.gameObject.TryGetComponent(out Target target))
+        {
+            Rigidbody targetRigidbody = target.GetComponent<Rigidbody>();
+            Vector3 forceDir = (other.contacts[0].point - transform.position).normalized;
+            target.gameObject.GetComponent<Target>().TakeDamage(30);
+            targetRigidbody.AddForce(forceDir * 30f, ForceMode.Impulse);
+        }
+        else if (other.gameObject.TryGetComponent(out SolderAI sodler))
+        {
+            Rigidbody targetRigidbody = target.GetComponent<Rigidbody>();
+            Vector3 forceDir = (other.contacts[0].point - transform.position).normalized;
+            
+            targetRigidbody.AddForce(forceDir * 30f, ForceMode.Impulse);
+        }
+    }
+
     private void GetInput() {
         // Steering Input
         _horizontalInput = Input.GetAxis("Horizontal");
@@ -73,9 +92,9 @@ public class VehicleController : MonoBehaviour
     }
 
     private void HandleMotor() {
-        // Calculate the target torque based on player input
+         
         float targetTorque = _verticalInput * motorForce;
-        // Smoothly interpolate the current motor torque to the target torque
+        
         currentMotorTorque = Mathf.Lerp(currentMotorTorque, targetTorque, Time.fixedDeltaTime * accelerationSmoothness);
         frontLeftWheelCollider.motorTorque = currentMotorTorque;
         frontRightWheelCollider.motorTorque = currentMotorTorque;
@@ -95,8 +114,7 @@ public class VehicleController : MonoBehaviour
         }
         else
         {
-            Debug.Log("accelerating");
-            if (vehicleSoundManager.CurrentEngineSoundType != VehicalSoundManager.EngineSoundType.Acceleration)
+             if (vehicleSoundManager.CurrentEngineSoundType != VehicalSoundManager.EngineSoundType.Acceleration)
             {
                 vehicleSoundManager.CurrentEngineSoundType = VehicalSoundManager.EngineSoundType.Acceleration;
             }
@@ -106,7 +124,7 @@ public class VehicleController : MonoBehaviour
     }
     
     void ApplyDownforce() {
-        float downforce = GetComponent<Rigidbody>().linearVelocity.magnitude * 10f; // tweak multiplier as needed
+        float downforce = GetComponent<Rigidbody>().linearVelocity.magnitude * 10f;  
         GetComponent<Rigidbody>().AddForce(-transform.up * downforce);
     }
 

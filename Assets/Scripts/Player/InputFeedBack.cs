@@ -11,7 +11,8 @@ public class InputFeedBack : MonoBehaviour
     public Vector2 lookDirection;
     
     public bool cursorInputForLook = true;
-    
+
+    public bool isChangingFireType = false;
     
     public void OnMove(InputValue value)
     {
@@ -37,6 +38,11 @@ public class InputFeedBack : MonoBehaviour
     public void OnInteract(InputValue value)
     {
         isInteracting = value.isPressed;
+    }
+
+    public void OnChangeFireType(InputValue value)
+    {
+        isChangingFireType = value.isPressed;
     }
     
     public void OnEscape(InputValue value)
