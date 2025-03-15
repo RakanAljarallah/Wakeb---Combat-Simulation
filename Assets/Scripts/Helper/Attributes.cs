@@ -15,7 +15,8 @@ namespace Helper
         public const string CROSSHAIR_TAG = "Crosshair";
         public const string FPS_CAMERA_TAG = "FPS Camera";
         public const string VEHICLE_TAG = "Vehicle";
-        public const string INTERACTION_UI = "InteractionUI";
+        public const string INTERACTION_UI_TAG = "InteractionUI";
+        public const string BASE_TAG = "Base";
     }
     
     public class AnimationTags

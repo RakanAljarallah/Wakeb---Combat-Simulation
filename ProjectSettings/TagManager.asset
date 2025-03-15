@@ -12,6 +12,9 @@ TagManager:
   - FPS Camera
   - Vehicle
   - InteractionUI
+  - Target
+  - Solder
+  - Base
   layers:
   - Default
   - TransparentFX
