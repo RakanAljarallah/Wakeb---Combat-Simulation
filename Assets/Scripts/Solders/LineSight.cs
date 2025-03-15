@@ -29,6 +29,7 @@ public class LineSight : MonoBehaviour
 
     void OnTriggerStay(Collider other)
     {
+      
         if (other.CompareTag(entityTag))
         {
             canSeeTraget = true;

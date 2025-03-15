@@ -13,7 +13,7 @@ public class Target : MonoBehaviour
     private Transform baseTarget;
     
     private float distanceToAttack = 2f;
-    private float currentHealth = 100f;
+    public float currentHealth = 100f;
     private float maxHealth = 100f;
     
     [SerializeField] Image healthBar;
@@ -91,8 +91,10 @@ public class Target : MonoBehaviour
     
     public void TakeDamage(float damage)
     {
-        healthBar.fillAmount -= damage / 100;
-        if (healthBar.fillAmount <= 0)
+        currentHealth -= damage;
+        healthBar.fillAmount = currentHealth / 100;
+        
+        if (currentHealth <= 0)
         {
             CurrState = TargetState.Die;
         }
@@ -121,6 +123,8 @@ public class Target : MonoBehaviour
             targetPool.Release(this);
         }
     }
+    
+    
     
     
     

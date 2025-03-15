@@ -1,4 +1,5 @@
 using System.Collections;
+using Helper;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -31,7 +32,7 @@ namespace Solders
             { 
                 currentState = value;
                 StopAllCoroutines();
-
+                Debug.Log("current state :" + currentState);
                 switch (currentState)
                 {
                     case EnemeyState.Patrolling:
@@ -64,8 +65,9 @@ namespace Solders
 
         private void Start()
         {
-            CurrentState = EnemeyState.Patrolling;
             currentPatrollingTarget = PatrollingTarget;
+            CurrentState = EnemeyState.Patrolling;
+            
         }
 
         public IEnumerator AIPatrolling()
@@ -87,8 +89,16 @@ namespace Solders
                     CurrentState = EnemeyState.Chasing;
                     yield break;
                 }
+
+                if (agent.remainingDistance <= agent.stoppingDistance)
+                {
+                    StopState();
+                }
+                else
+                {
+                    RunState();
+                }
                 
-                RunState();
 
                 yield return null;
             }
@@ -143,7 +153,7 @@ namespace Solders
                     yield return null;
                 }
 
-                if (agent.remainingDistance > attackRange)
+                if (agent.remainingDistance > attackRange || !lineSight.canSeeTraget)
                 {
                     StopShoot();
                     agent.isStopped = true;
@@ -151,6 +161,8 @@ namespace Solders
                     yield break;
                 }
                 
+                
+                transform.LookAt(lineSight.lastKnownPosition);
                 StopState();
                 ShootState();
                 
@@ -159,23 +171,43 @@ namespace Solders
             yield return null;
         }
         
-        private void RunState()
-        {
-            solderAnimation.Run(true);
-            solderSound.PlayRunSound();
-        }
+       
 
         private void ShootState()
         {
             solderAnimation.Shoot(true);
             solderSound.PlayShotSound();
             solderShoot.TunrOnMuzzleFlash();
+           RaycastHit hit =    solderShoot.ShotPoint();
+
+           if (hit.transform.CompareTag(Tags.TARGET_TAG))
+           {
+               Target target = hit.transform.GetComponent<Target>();
+               target.TakeDamage(10);
+               bool isDead = target.currentHealth <= 0;
+               
+               
+               if (isDead)
+               {
+                   agent.isStopped = true;
+                   CurrentState = EnemeyState.Patrolling;
+               }
+               
+           }
+           
+            
         }
 
         private void StopShoot()
         {
             solderAnimation.Shoot(false);
             solderShoot.TunrOffMuzzleFlash();
+        }
+        
+        private void RunState()
+        {
+            solderAnimation.Run(true);
+            solderSound.PlayRunSound();
         }
 
         private void StopState()

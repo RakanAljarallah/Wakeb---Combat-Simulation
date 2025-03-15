@@ -9,6 +9,8 @@ namespace Solders
         [SerializeField] private Transform shotPoint;
         [SerializeField] private GameObject muzzleFlash;
         
+        [SerializeField] private Transform shotEffect;
+        
         private void Start()
         {
             muzzleFlash.SetActive(false);
@@ -24,17 +26,18 @@ namespace Solders
             muzzleFlash.SetActive(false);
         }
 
-        public Transform ShotPoint()
+        public RaycastHit ShotPoint()
         {
-            RaycastHit hit;
+            // RaycastHit hit;
 
-            if (Physics.Raycast(shotPoint.position, shotPoint.forward, out hit, 30f))
+            if (Physics.Raycast(shotPoint.position, shotPoint.forward, out RaycastHit hit, 30f))
             {
-                return hit.transform;
-                
+                shotEffect.position = hit.point;
+                shotEffect.GetComponent<ParticleSystem>().Play();
+                return hit;
             }
-
-            return null;
+            
+            return hit;
         }
         
     }

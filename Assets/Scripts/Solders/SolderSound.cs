@@ -17,12 +17,19 @@ namespace Solders
 
         public void PlayRunSound()
         {
-            audioSource.PlayOneShot(runClip);
+            if (!audioSource.isPlaying)
+            {
+                audioSource.PlayOneShot(runClip);
+            }
+            
         }
         
         public void PlayShotSound()
         {
-            audioSource.PlayOneShot(shotClip);
+            if (!audioSource.isPlaying)
+            {
+                audioSource.PlayOneShot(shotClip);
+            }
         }
         
     }
